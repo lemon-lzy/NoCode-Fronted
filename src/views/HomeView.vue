@@ -1,86 +1,118 @@
 <script setup lang="ts">
-// 定义案例数据
-const cases = [
+import { useRouter } from 'vue-router'
+import { useUserStore } from '../stores/user'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { userLogout } from '../api/userController'
+
+const router = useRouter()
+const userStore = useUserStore()
+
+// 跳转到登录页面
+const goToLogin = () => {
+  router.push('/user/login')
+}
+
+// 下拉菜单状态
+const showDropdown = ref(false)
+
+// 切换下拉菜单
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value
+}
+
+// 点击外部关闭下拉菜单
+const handleClickOutside = (event: MouseEvent) => {
+  const dropdown = document.querySelector('.dropdown-menu')
+  const profile = document.querySelector('.user-profile')
+  if (dropdown && profile && !dropdown.contains(event.target as Node) && !profile.contains(event.target as Node)) {
+    showDropdown.value = false
+  }
+}
+
+// 添加点击外部关闭事件
+onMounted(() => {
+  userStore.initUserInfo()
+  document.addEventListener('click', handleClickOutside)
+})
+
+// 移除点击外部关闭事件
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
+
+// 退出登录处理
+const handleLogout = async () => {
+  try {
+    // 调用退出登录接口
+    await userLogout()
+    // 清空用户信息
+    userStore.clearUserInfo()
+    // 关闭下拉菜单
+    showDropdown.value = false
+    // 跳转到首页
+    router.push('/')
+  } catch (error) {
+    console.error('退出登录失败:', error)
+    // 即使接口调用失败，也要清空本地用户信息
+    userStore.clearUserInfo()
+    showDropdown.value = false
+    router.push('/')
+  }
+}
+
+// 案例数据
+const caseData = [
   {
     id: 1,
-    title: 'NoCode创新挑战赛官网',
-    description: '创新挑战赛重磅开启',
-    type: '网站',
-    date: '2024-01-03',
-    author: '探索',
-    image: 'https://via.placeholder.com/300x200/000000/ffffff?text=NoCode+%E5%88%9B%E6%96%B0%E6%8C%91%E6%88%98%E8%B5%9B'
+    title: '电商网站',
+    description: '使用NoCode快速搭建的电商平台，包含商品展示、购物车、支付功能',
+    image: 'https://picsum.photos/seed/ecommerce/300/200'
   },
   {
     id: 2,
-    title: '新居民',
-    description: '',
-    type: '用户应用',
-    date: '2024-10-31',
-    author: 'jdakjdoajkdkg',
-    image: 'https://via.placeholder.com/300x200/FF6B6B/ffffff?text=%E6%96%B0%E5%B1%85%E6%B0%91'
+    title: '企业官网',
+    description: '现代化企业官网，响应式设计，支持多语言切换',
+    image: 'https://picsum.photos/seed/corporate/300/200'
   },
   {
     id: 3,
-    title: '御家如意',
-    description: '',
-    type: '用户应用',
-    date: '2024-11-01',
-    author: 'RUH4G20E13002',
-    image: 'https://via.placeholder.com/300x200/4ECDC4/ffffff?text=%E5%BE%A1%E5%AE%B6%E5%A6%82%E6%84%8F'
+    title: '个人博客',
+    description: '简洁美观的个人博客系统，支持文章分类、评论功能',
+    image: 'https://picsum.photos/seed/blog/300/200'
   },
   {
     id: 4,
-    title: 'WePin (拼针)',
-    description: 'WePin, We Share.',
-    type: '用户应用',
-    date: '2024-09-19',
-    author: 'Kd16849761008',
-    image: 'https://via.placeholder.com/300x200/FFD166/000000?text=WePin'
+    title: 'CRM系统',
+    description: '客户关系管理系统，帮助企业管理客户信息和销售流程',
+    image: 'https://picsum.photos/seed/crm/300/200'
   },
   {
     id: 5,
-    title: 'Echo回声',
-    description: '',
-    type: '用户应用',
-    date: '2024-11-11',
-    author: '橙子橙orangequokka',
-    image: 'https://via.placeholder.com/300x200/06D6A0/ffffff?text=Echo%E5%9B%9E%E5%A3%B0'
+    title: '数据分析面板',
+    description: '直观的数据可视化面板，实时展示业务数据',
+    image: 'https://picsum.photos/seed/analytics/300/200'
   },
   {
     id: 6,
-    title: '办公用品管理平台-相对...',
-    description: '办公用品管理系统',
-    type: '管理平台',
-    date: '2024-11-07',
-    author: 'NoCode小助手',
-    image: 'https://via.placeholder.com/300x200/118AB2/ffffff?text=%E5%85%AC%E5%8A%A1%E7%94%A8%E5%93%81%E7%AE%A1%E7%90%86'
-  },
-  {
-    id: 7,
-    title: '双国时光',
-    description: '',
-    type: '管理平台',
-    date: '2024-08-21',
-    author: '请手12388',
-    image: 'https://via.placeholder.com/300x200/073B4C/ffffff?text=%E5%8F%8C%E5%9B%BD%E6%97%B6%E5%85%89'
-  },
-  {
-    id: 8,
-    title: '智能饮食推荐面板',
-    description: '智能饮食推荐面板',
-    type: '管理平台',
-    date: '2024-10-29',
-    author: '1J1Z727',
-    image: 'https://via.placeholder.com/300x200/FF9F1C/ffffff?text=%E6%99%BA%E8%83%BD%E9%A5%AE%E9%A3%9F%E6%8E%A8%E8%8D%90'
+    title: '活动报名页面',
+    description: '美观的活动报名页面，支持在线支付和统计',
+    image: 'https://picsum.photos/seed/event/300/200'
   }
 ]
-
-// 定义分类标签
-const categories = ['全部', '工具', '网站', '数据分析', '活动页面', '管理平台', '用户应用', '个人管理', '游戏']
 </script>
 
 <template>
   <div class="home-container">
+    <!-- 顶部通知栏 -->
+    <div class="top-notice">
+      <div class="notice-content">
+        <span class="notice-icon">💡</span>
+        <span class="notice-text">NoCode新增批量生成功能，半天即可搭建完整应用，</span>
+        <a href="#" class="notice-link">立即查看</a>
+        <button class="close-btn">×</button>
+      </div>
+    </div>
+
     <!-- 顶部导航 -->
     <header class="top-header">
       <div class="header-content">
@@ -89,17 +121,40 @@ const categories = ['全部', '工具', '网站', '数据分析', '活动页面'
           <span class="logo-text">NoCode</span>
         </div>
         <nav class="main-nav">
-          <a href="#" class="nav-link">使用文档</a>
-          <a href="#" class="nav-link">交流社区</a>
-          <a href="#" class="nav-link">更多产品</a>
+          <a href="#" class="nav-item">使用文档</a>
+          <a href="#" class="nav-item">交流社区</a>
+          <a href="#" class="nav-item">更多产品</a>
         </nav>
         <div class="header-right">
-          <div class="notification">
-            <span class="notification-icon">💬</span>
-            <span class="notification-text">一句话需求：NoCode创新挑战赛重磅升级，丰厚大奖立即查看</span>
-            <span class="notification-close">✕</span>
+          <button class="search-btn">🔍</button>
+          <!-- 登录后显示用户信息 -->
+          <div v-if="userStore.isLoggedIn" class="user-profile" @click="toggleDropdown">
+            <div class="user-info">
+              <span class="user-name">{{ userStore.userName }}</span>
+            </div>
+            <img :src="userStore.userAvatar" alt="用户头像" class="user-avatar" />
           </div>
-          <button class="login-btn">登录</button>
+          <!-- 未登录时显示登录按钮 -->
+          <button v-else class="login-btn" @click="goToLogin">登录</button>
+          
+          <!-- 下拉菜单 -->
+          <div v-if="userStore.isLoggedIn && showDropdown" class="dropdown-menu">
+            <!-- 用户管理（仅管理员可见） -->
+            <div v-if="userStore.userInfo?.userRole === 'admin'" class="dropdown-item" @click.stop="router.push('/admin/user-management')">
+              <span class="item-icon">⚙️</span>
+              <span class="item-text">用户管理</span>
+            </div>
+            <!-- 个人中心 -->
+            <div class="dropdown-item" @click.stop="router.push('/user/profile')">
+              <span class="item-icon">👤</span>
+              <span class="item-text">个人中心</span>
+            </div>
+            <!-- 退出登录 -->
+            <div class="dropdown-item logout-item" @click.stop="handleLogout">
+              <span class="item-icon">🚪</span>
+              <span class="item-text">退出登录</span>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -107,75 +162,78 @@ const categories = ['全部', '工具', '网站', '数据分析', '活动页面'
     <!-- 主要内容区域 -->
     <section class="main-content">
       <div class="content-wrapper">
-        <h1 class="main-title">
-          一句话
-          <span class="logo-icon">🐱</span>
-          呈所想
-        </h1>
-        <p class="sub-title">与AI对话轻松创建应用和网站</p>
+        <h1 class="main-title">一句话 🐱 呈所想</h1>
+        <p class="main-subtitle">与AI对话轻松创建应用和网站</p>
         
-        <div class="input-container">
-          <input 
-            type="text" 
-            class="ai-input" 
-            placeholder="使用 NoCode 创建一个信息管理系"
-          />
-          <div class="input-actions">
-            <span class="action-item">上传</span>
-            <span class="action-item">优化</span>
+        <!-- AI输入区域 -->
+        <div class="ai-input-area">
+          <div class="dialog-box">
+            <div class="input-row">
+              <input
+                type="text"
+                class="ai-input"
+                placeholder="使用NoCode创建一个数据分析看板，"
+                :disabled="!userStore.isLoggedIn"
+              />
+              <button class="ai-submit-btn" :disabled="!userStore.isLoggedIn">
+                <span class="submit-icon">↑</span>
+              </button>
+            </div>
+            <!-- 未登录提示 -->
+            <div v-if="!userStore.isLoggedIn" class="login-prompt">
+              <span>请先登录后使用AI对话功能</span>
+            </div>
           </div>
-          <div class="input-bottom">
-            <span class="input-tag">旅游网页页面</span>
-            <span class="input-tag">企业网站</span>
-            <span class="input-tag">电商运营后台</span>
-            <span class="input-tag">黑暗森林社区</span>
+          
+          <!-- 快速选项标签 -->
+          <div class="quick-options">
+            <span class="option-tag" :class="{ 'disabled': !userStore.isLoggedIn }" @click="!userStore.isLoggedIn && goToLogin()">炫酷电商页面</span>
+            <span class="option-tag" :class="{ 'disabled': !userStore.isLoggedIn }" @click="!userStore.isLoggedIn && goToLogin()">企业官网</span>
+            <span class="option-tag" :class="{ 'disabled': !userStore.isLoggedIn }" @click="!userStore.isLoggedIn && goToLogin()">电商运营后台</span>
+            <span class="option-tag" :class="{ 'disabled': !userStore.isLoggedIn }" @click="!userStore.isLoggedIn && goToLogin()">赚钱社区</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 案例广场 -->
+    <!-- 案例展示区 -->
     <section class="case-section">
-      <div class="case-container">
+      <div class="case-wrapper">
         <div class="case-header">
           <h2 class="case-title">案例广场</h2>
-          <div class="case-controls">
-            <select class="sort-select">
-              <option>默认排序</option>
-              <option>最新</option>
-              <option>最受欢迎</option>
-            </select>
-            <div class="category-tabs">
-              <button 
-                v-for="category in categories" 
-                :key="category"
-                class="category-tab"
-                :class="{ active: category === '全部' }"
-              >
-                {{ category }}
-              </button>
+          <div class="case-filters">
+            <div class="filter-dropdown">
+              <button class="filter-btn">默认排序</button>
             </div>
-            <button class="all-cases-btn">全部案例 ›</button>
+            <div class="filter-actions">
+              <button class="view-all-btn">全部案例</button>
+              <button class="refresh-btn">🔄</button>
+            </div>
           </div>
         </div>
         
+        <!-- 筛选标签 -->
+        <div class="case-tags">
+          <span class="tag active">全部</span>
+          <span class="tag">工具</span>
+          <span class="tag">网站</span>
+          <span class="tag">数据分析</span>
+          <span class="tag">活动页面</span>
+          <span class="tag">管理平台</span>
+          <span class="tag">用户应用</span>
+          <span class="tag">个人管理</span>
+          <span class="tag">游戏</span>
+        </div>
+        
         <div class="case-grid">
-          <div 
-            v-for="item in cases" 
-            :key="item.id"
-            class="case-card"
-          >
+          <div v-for="caseItem in caseData" :key="caseItem.id" class="case-card">
             <div class="case-image">
-              <img :src="item.image" :alt="item.title" />
+              <img :src="caseItem.image" :alt="caseItem.title" />
             </div>
             <div class="case-info">
-              <h3 class="case-card-title">{{ item.title }}</h3>
-              <p class="case-card-description">{{ item.description }}</p>
-              <div class="case-meta">
-                <span class="case-type">{{ item.type }}</span>
-                <span class="case-date">{{ item.date }}</span>
-                <span class="case-author">{{ item.author }}</span>
-              </div>
+              <h3 class="case-card-title">{{ caseItem.title }}</h3>
+              <p class="case-card-description">{{ caseItem.description }}</p>
+              <button class="case-view-btn">查看详情</button>
             </div>
           </div>
         </div>
@@ -185,18 +243,68 @@ const categories = ['全部', '工具', '网站', '数据分析', '活动页面'
 </template>
 
 <style scoped>
+/* 全局样式重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 .home-container {
   min-height: 100vh;
-  background-color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  position: relative;
+}
+
+/* 顶部通知栏 */
+.top-notice {
+  background-color: #d1fae5;
+  padding: 0.5rem 0;
+  text-align: center;
+  font-size: 12px;
+  color: #065f46;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 101;
+}
+
+.notice-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.notice-icon {
+  font-size: 14px;
+}
+
+.notice-link {
+  color: #059669;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #065f46;
+  margin-left: 0.5rem;
 }
 
 /* 顶部导航 */
 .top-header {
-  background-color: #fff;
-  border-bottom: 1px solid #e5e7eb;
-  position: sticky;
-  top: 0;
+  background-color: transparent;
+  position: absolute;
+  top: 28px;
+  left: 0;
+  right: 0;
   z-index: 100;
 }
 
@@ -219,7 +327,7 @@ const categories = ['全部', '工具', '网站', '数据分析', '活动页面'
 }
 
 .logo-icon {
-  font-size: 1.8rem;
+  font-size: 1.75rem;
 }
 
 .main-nav {
@@ -227,14 +335,15 @@ const categories = ['全部', '工具', '网站', '数据分析', '活动页面'
   gap: 2rem;
 }
 
-.nav-link {
-  color: #4b5563;
+.nav-item {
   text-decoration: none;
-  font-size: 0.95rem;
+  color: rgba(17, 24, 39, 0.7);
+  font-weight: 500;
   transition: color 0.2s;
+  font-size: 14px;
 }
 
-.nav-link:hover {
+.nav-item:hover {
   color: #111827;
 }
 
@@ -244,150 +353,314 @@ const categories = ['全部', '工具', '网站', '数据分析', '活动页面'
   gap: 1rem;
 }
 
-.notification {
+.search-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: rgba(17, 24, 39, 0.7);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: #ecfdf5;
-  border: 1px solid #d1fae5;
-  border-radius: 0.5rem;
-  font-size: 0.85rem;
-  color: #065f46;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
-.notification-close {
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-}
-
-.notification-close:hover {
-  opacity: 1;
+.search-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .login-btn {
   padding: 0.5rem 1.5rem;
-  background-color: #111827;
-  color: #fff;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.9rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #111827;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.login-btn:hover {
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 用户信息样式 */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 下拉菜单样式 */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 240px;
+  z-index: 1000;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+/* 下拉菜单项样式 */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
-.login-btn:hover {
-  background-color: #374151;
+.dropdown-item:hover {
+  background-color: #f9fafb;
+}
+
+/* 下拉菜单项图标 */
+.item-icon {
+  margin-right: 0.75rem;
+  font-size: 16px;
+}
+
+/* 下拉菜单项文本 */
+.item-text {
+  font-size: 14px;
+  color: #374151;
+}
+
+/* 退出登录项样式 */
+.logout-item {
+  color: #ef4444;
+  margin-top: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.logout-item .item-text {
+  color: #ef4444;
+}
+
+/* 使用户资料区域可点击 */
+.user-profile {
+  cursor: pointer;
 }
 
 /* 主要内容区域 */
 .main-content {
-  background: linear-gradient(to bottom, #fff, #f0fdfa, #ccfbf1);
-  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #ffffff 0%, #e0f2fe 50%, #d1fae5 100%);
+  padding: 10rem 2rem 8rem;
   text-align: center;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .content-wrapper {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
 .main-title {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: bold;
   color: #111827;
   margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
+  line-height: 1.2;
 }
 
-.sub-title {
+.main-subtitle {
   font-size: 1.25rem;
   color: #6b7280;
   margin-bottom: 3rem;
 }
 
-.input-container {
+/* AI输入区域 */
+.ai-input-area {
+  margin-top: 4rem;
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dialog-box {
   background-color: #fff;
-  border-radius: 1rem;
+  border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  max-width: 700px;
-  margin: 0 auto;
+  padding: 0;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.input-row {
+  display: flex;
+  gap: 0;
+  margin: 0;
+  align-items: stretch;
+  height: 56px;
+}
+
+.input-prefix {
+  padding: 0 16px;
+  background-color: #f9fafb;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .ai-input {
-  width: 100%;
-  padding: 1rem;
-  font-size: 1.1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
-  margin-bottom: 1rem;
+  flex: 1;
+  padding: 0 16px;
+  border: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
-}
-
-.ai-input:focus {
-  border-color: #10b981;
-}
-
-.input-actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  justify-content: flex-end;
-}
-
-.action-item {
-  padding: 0.5rem 1rem;
-  background-color: #f3f4f6;
-  border-radius: 0.5rem;
-  font-size: 0.9rem;
-  color: #6b7280;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.action-item:hover {
-  background-color: #e5e7eb;
-}
-
-.input-bottom {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.input-tag {
-  padding: 0.5rem 1rem;
-  background-color: #f3f4f6;
-  border-radius: 0.75rem;
-  font-size: 0.9rem;
-  color: #4b5563;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.input-tag:hover {
-  background-color: #e5e7eb;
-}
-
-/* 案例广场 */
-.case-section {
-  padding: 4rem 2rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  line-height: 1.5;
   background-color: #fff;
 }
 
-.case-container {
+.ai-input:focus {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ai-submit-btn {
+  padding: 0 20px;
+  background-color: #fff;
+  color: rgba(0, 0, 0, 0.5);
+  border: none;
+  font-size: 18px;
+  font-weight: normal;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-submit-btn:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.submit-icon {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* 快速选项标签 */
+.quick-options {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.option-tag {
+  padding: 8px 16px;
+  background-color: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+}
+
+.option-tag:hover {
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* 未登录提示样式 */
+.login-prompt {
+  background-color: #fef3c7;
+  color: #92400e;
+  padding: 0.75rem 1rem;
+  font-size: 12px;
+  text-align: left;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 禁用状态样式 */
+.ai-input:disabled {
+  background-color: #f9fafb;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.ai-submit-btn:disabled {
+  background-color: #f9fafb;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.option-tag.disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.option-tag.disabled:hover {
+  background-color: #f3f4f6;
+  box-shadow: none;
+  color: #9ca3af;
+}
+
+/* 案例展示区 */
+.case-section {
+  padding: 6rem 2rem 4rem;
+  background-color: #fff;
+}
+
+.case-wrapper {
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .case-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
 }
 
@@ -395,91 +668,126 @@ const categories = ['全部', '工具', '网站', '数据分析', '活动页面'
   font-size: 1.75rem;
   font-weight: bold;
   color: #111827;
-  margin-bottom: 1rem;
+  margin: 0;
 }
 
-.case-controls {
+.case-filters {
   display: flex;
+  gap: 1rem;
   align-items: center;
-  gap: 2rem;
-  flex-wrap: wrap;
 }
 
-.sort-select {
+.filter-dropdown {
+  position: relative;
+}
+
+.filter-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid #e5e7eb;
+  background-color: transparent;
+  color: #111827;
+  border: 2px solid #e5e7eb;
   border-radius: 0.5rem;
   font-size: 0.9rem;
-  color: #4b5563;
-  cursor: pointer;
-}
-
-.category-tabs {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.category-tab {
-  padding: 0.5rem 1.25rem;
-  background-color: #f3f4f6;
-  border: none;
-  border-radius: 0.75rem;
-  font-size: 0.9rem;
-  color: #4b5563;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.category-tab:hover {
-  background-color: #e5e7eb;
+.filter-btn:hover {
+  background-color: #f3f4f6;
 }
 
-.category-tab.active {
-  background-color: #111827;
-  color: #fff;
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
-.all-cases-btn {
+.view-all-btn {
   padding: 0.5rem 1rem;
   background-color: transparent;
-  border: none;
+  color: #111827;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
   font-size: 0.9rem;
-  color: #4b5563;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-all-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.refresh-btn {
+  background: none;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
-.all-cases-btn:hover {
-  color: #111827;
+.refresh-btn:hover {
+  background-color: #f3f4f6;
 }
 
-/* 案例网格 */
+/* 筛选标签 */
+.case-tags {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tag {
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+  border-radius: 1.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tag:hover {
+  background-color: #f3f4f6;
+}
+
+.tag.active {
+  background-color: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+
 .case-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
 }
 
 .case-card {
-  background-color: #fff;
+  background-color: #f9fafb;
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
 }
 
 .case-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .case-image {
   width: 100%;
-  height: 180px;
+  height: 200px;
   overflow: hidden;
 }
 
@@ -487,6 +795,11 @@ const categories = ['全部', '工具', '网站', '数据分析', '活动页面'
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.case-card:hover .case-image img {
+  transform: scale(1.05);
 }
 
 .case-info {
@@ -494,72 +807,98 @@ const categories = ['全部', '工具', '网站', '数据分析', '活动页面'
 }
 
 .case-card-title {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #111827;
   margin-bottom: 0.5rem;
 }
 
 .case-card-description {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #6b7280;
   margin-bottom: 1rem;
-  height: 36px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  line-height: 1.5;
 }
 
-.case-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.8rem;
-  color: #9ca3af;
+.case-view-btn {
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  color: #111827;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.case-type {
-  background-color: #f3f4f6;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
+.case-view-btn:hover {
+  background-color: #111827;
+  color: #fff;
 }
 
 /* 响应式设计 */
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .main-nav {
-    gap: 1rem;
-  }
-
-  .header-right {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
+@media (max-width: 1024px) {
   .main-title {
     font-size: 2.5rem;
   }
+  
+  .case-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
 
-  .case-controls {
+@media (max-width: 768px) {
+  .top-notice {
+    display: none;
+  }
+  
+  .top-header {
+    top: 0;
+  }
+  
+  .header-content {
+    padding: 1rem;
+  }
+  
+  .main-nav {
+    display: none;
+  }
+  
+  .main-title {
+    font-size: 2rem;
+  }
+  
+  .main-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .ai-input-area {
+    max-width: 100%;
+  }
+  
+  .input-prefix {
+    display: none;
+  }
+  
+  .case-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-
-  .category-tabs {
-    width: 100%;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
+  
+  .case-tags {
+    gap: 0.5rem;
   }
-
+  
+  .tag {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
   .case-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
   }
 }
 </style>

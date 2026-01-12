@@ -7,5 +7,5 @@ import { RouterView } from 'vue-router'
 </template>
 
 <style scoped>
-/* 移除默认样式，使用HomeView中的自定义样式 */
+/* 移除所有默认样式，使用HomeView中的自定义样式 */
 </style>

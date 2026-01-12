@@ -20,7 +20,6 @@ a,
   }
 }
 
-/* 移除默认的桌面端布局样式，使用页面自身的布局 */
 @media (min-width: 1024px) {
   body {
     display: block;
@@ -28,5 +27,6 @@ a,
 
   #app {
     display: block;
+    width: 100%;
   }
 }
